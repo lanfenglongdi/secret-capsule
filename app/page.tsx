@@ -24,7 +24,10 @@ export default function Home() {
       margin: "0 auto",
       textAlign: "center"
     }}>
-      <h1 style={{ fontSize: 48, marginBottom: 30, fontWeight: 700 }}>🔐 Secret Capsule</h1>
+      <h1 style={{ fontSize: 48, marginBottom: 30, fontWeight: 700, lineHeight: 1.2 }}>
+        🔐 Secret Capsule<br />
+        <span style={{ fontSize: 36 }}>秘密胶囊</span>
+      </h1>
       
       {/* 主标语区域 */}
       <div style={{
