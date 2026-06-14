@@ -355,15 +355,9 @@ export default function Create() {
               ⚠️ Important Notice
             </p>
             <ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, color: "#666", lineHeight: 1.8 }}>
-<<<<<<< HEAD
-              <li>Please make sure to write down your <strong>Secret ID</strong> and <strong>Password</strong></li>
-              <li>You can only unlock the secret by entering both the ID and password</li>
-              <li>Neither the ID nor the password can be recovered. Please keep them safe!</li>
-=======
               <li>请务必记下你的<strong>秘密编号</strong>和<strong>密码</strong></li>
               <li>只有输入编号和密码才可解锁秘密</li>
               <li>密码编号和密码都无法找回，请妥善保管！</li>
->>>>>>> 84cb70c (Fix scrolling issue on create and unlock pages)
             </ul>
           </div>
 
