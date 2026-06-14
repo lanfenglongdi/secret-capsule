@@ -18,7 +18,7 @@ export default function Home() {
         maxWidth: 900, 
         width: "100%",
         textAlign: "center",
-        transform: "scale(0.87)",
+        transform: "scale(1.2)",
         transformOrigin: "top center"
       }}>
         {/* Title */}
