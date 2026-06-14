@@ -71,8 +71,16 @@ export default function UnlockPage() {
   }
 
   return (
-    <div style={{ padding: 40, maxWidth: 600, margin: "0 auto", position: "relative" }}>
-      {/* Home link */}
+    <div style={{ 
+      minHeight: "100vh",
+      padding: 40, 
+      maxWidth: 600, 
+      margin: "0 auto", 
+      position: "relative",
+      overflowY: "auto",
+      boxSizing: "border-box"
+    }}>
+      {/* 首页链接 */}
       <a 
         href="/" 
         style={{
