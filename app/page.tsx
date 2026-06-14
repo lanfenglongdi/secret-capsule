@@ -49,7 +49,7 @@ export default function Home() {
             margin: "6px 0",
             fontWeight: 500
           }}>
-            Record important text or numbers for your forgetful future self!
+            Record important text or numbers for your future self!
           </p>
           <p style={{ 
             fontSize: 12, 
