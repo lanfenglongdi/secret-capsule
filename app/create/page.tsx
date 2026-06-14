@@ -129,7 +129,7 @@ export default function Create() {
       overflowY: "auto",
       boxSizing: "border-box"
     }}>
-      {/* 解密链接 */}
+      {/* Decrypt link */}
       <a 
         href="/s/any" 
         style={{

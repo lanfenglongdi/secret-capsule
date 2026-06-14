@@ -80,7 +80,7 @@ export default function UnlockPage() {
       overflowY: "auto",
       boxSizing: "border-box"
     }}>
-      {/* 首页链接 */}
+      {/* Home link */}
       <a 
         href="/" 
         style={{
