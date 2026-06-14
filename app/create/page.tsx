@@ -146,7 +146,7 @@ export default function Create() {
           秘密内容
         </label>
         <textarea
-          placeholder="在这里写下你想保密的话..."
+          placeholder="秘密一旦创建,任何人不可删除，不可修改，永远保存&#10;&#10;在这里写下你想保密的话..."
           value={text}
           onChange={(e) => setText(e.target.value)}
           style={{
