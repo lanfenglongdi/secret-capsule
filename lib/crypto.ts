@@ -1,7 +1,16 @@
+// 确保只在浏览器环境中使用 Web Crypto API
+function getCrypto() {
+  if (typeof window === 'undefined' || !window.crypto) {
+    throw new Error('Web Crypto API is not available in this environment');
+  }
+  return window.crypto.subtle;
+}
+
 export async function encrypt(text: string, password: string) {
+  const subtle = getCrypto();
   const enc = new TextEncoder();
 
-  const keyMaterial = await crypto.subtle.importKey(
+  const keyMaterial = await subtle.importKey(
     "raw",
     enc.encode(password),
     "PBKDF2",
@@ -9,10 +18,10 @@ export async function encrypt(text: string, password: string) {
     ["deriveKey"]
   );
 
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const salt = window.crypto.getRandomValues(new Uint8Array(16));
+  const iv = window.crypto.getRandomValues(new Uint8Array(12));
 
-  const key = await crypto.subtle.deriveKey(
+  const key = await subtle.deriveKey(
     {
       name: "PBKDF2",
       salt,
@@ -25,7 +34,7 @@ export async function encrypt(text: string, password: string) {
     ["encrypt"]
   );
 
-  const encrypted = await crypto.subtle.encrypt(
+  const encrypted = await subtle.encrypt(
     { name: "AES-GCM", iv },
     key,
     enc.encode(text)
@@ -44,6 +53,7 @@ export async function decrypt(
   iv: string,
   password: string
 ): Promise<string> {
+  const subtle = getCrypto();
   const dec = new TextDecoder();
 
   // 将 base64 字符串转换回 Uint8Array
@@ -52,7 +62,7 @@ export async function decrypt(
   const ivBytes = Uint8Array.from(atob(iv), c => c.charCodeAt(0));
 
   // 从密码派生密钥
-  const keyMaterial = await crypto.subtle.importKey(
+  const keyMaterial = await subtle.importKey(
     "raw",
     new TextEncoder().encode(password),
     "PBKDF2",
@@ -60,7 +70,7 @@ export async function decrypt(
     ["deriveKey"]
   );
 
-  const key = await crypto.subtle.deriveKey(
+  const key = await subtle.deriveKey(
     {
       name: "PBKDF2",
       salt: saltBytes,
@@ -74,7 +84,7 @@ export async function decrypt(
   );
 
   // 解密密文
-  const decrypted = await crypto.subtle.decrypt(
+  const decrypted = await subtle.decrypt(
     { name: "AES-GCM", iv: ivBytes },
     key,
     cipherBytes
