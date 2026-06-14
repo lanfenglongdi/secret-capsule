@@ -16,18 +16,18 @@ export default function Create() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   
-  // Captcha state
+  // 验证码状态
   const [captcha, setCaptcha] = useState<CaptchaData | null>(null);
   const [captchaAnswer, setCaptchaAnswer] = useState("");
   const [showCaptcha, setShowCaptcha] = useState(false);
   
-  // Generate captcha
+  // 生成验证码
   useEffect(() => {
     generateNewCaptcha();
   }, []);
 
   function generateNewCaptcha() {
-    // Simple math problem generation
+    // 简单的数学题生成
     const operators = ['+', '-'];
     const operator = operators[Math.floor(Math.random() * operators.length)];
     
@@ -55,24 +55,24 @@ export default function Create() {
 
   async function create() {
     if (!text.trim()) {
-      setError("Please enter your secret content");
+      setError("请输入秘密内容");
       return;
     }
     if (!password) {
-      setError("Please set a password");
+      setError("请设置密码");
       return;
     }
     
-    // Verify captcha
+    // 验证验证码
     if (!captcha) {
-      setError("Please complete the human verification");
+      setError("请完成人机验证");
       generateNewCaptcha();
       return;
     }
     
     const userAnswer = parseInt(captchaAnswer);
     if (isNaN(userAnswer) || userAnswer !== captcha.answer) {
-      setError("❌ Incorrect captcha answer, please recalculate");
+      setError("❌ 验证码答案错误，请重新计算");
       generateNewCaptcha();
       return;
     }
@@ -98,25 +98,25 @@ export default function Create() {
       if (!res.ok) {
         const errorData = await res.json();
         if (res.status === 429) {
-          throw new Error("Too many requests, please try again later");
+          throw new Error("请求过于频繁，请稍后再试");
         }
-        throw new Error(errorData.error || "Failed to save");
+        throw new Error(errorData.error || "保存失败");
       }
 
       setResult(id);
       setShowCaptcha(false);
     } catch (err: any) {
-      setError(err.message || "Creation failed, please try again");
-      generateNewCaptcha(); // Refresh captcha
+      setError(err.message || "创建失败，请重试");
+      generateNewCaptcha(); // 刷新验证码
     } finally {
       setLoading(false);
     }
   }
 
   function copyToClipboard() {
-    // Copy secret ID
+    // 复制秘密编号
     navigator.clipboard.writeText(result);
-    alert("Secret ID copied to clipboard!");
+    alert("秘密编号已复制到剪贴板！");
   }
 
   return (
@@ -129,7 +129,7 @@ export default function Create() {
       overflowY: "auto",
       boxSizing: "border-box"
     }}>
-      {/* Decrypt link */}
+      {/* 解密链接 */}
       <a 
         href="/s/any" 
         style={{
@@ -144,17 +144,17 @@ export default function Create() {
         onMouseEnter={(e) => e.currentTarget.style.textDecoration = "underline"}
         onMouseLeave={(e) => e.currentTarget.style.textDecoration = "none"}
       >
-        🔓 Decrypt
+        🔓 解密
       </a>
 
-      <h1>🔒 Create Secret</h1>
+      <h1>🔒 创建秘密</h1>
 
       <div style={{ marginTop: 30 }}>
         <label style={{ display: "block", marginBottom: 8, fontWeight: "bold" }}>
-          Secret Content
+          秘密内容
         </label>
         <textarea
-          placeholder="Once created, secrets cannot be deleted or modified - they are stored forever&#10;&#10;Write down what you want to keep secret here..."
+          placeholder="秘密一旦创建,任何人不可删除，不可修改，永远保存&#10;&#10;在这里写下你想保密的话..."
           value={text}
           onChange={(e) => setText(e.target.value)}
           style={{
@@ -173,11 +173,11 @@ export default function Create() {
 
       <div style={{ marginTop: 20 }}>
         <label style={{ display: "block", marginBottom: 8, fontWeight: "bold" }}>
-          Set Password
+          设置密码
         </label>
         <input
           type="password"
-          placeholder="Set a strong password for encryption"
+          placeholder="设置一个强密码用于加密"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           style={{
@@ -190,11 +190,11 @@ export default function Create() {
           }}
         />
         <p style={{ fontSize: 12, color: "#999", marginTop: 4 }}>
-          ⚠️ Remember your password! It's required for decryption. End-to-end encrypted, passwords cannot be recovered.
+          ⚠️ 请记住密码！解密时需要使用，端到端加密，密码无法找回。
         </p>
       </div>
 
-      {/* Human verification */}
+      {/* 人机验证 */}
       {captcha && !result && (
         <div style={{ 
           marginTop: 20,
@@ -204,7 +204,7 @@ export default function Create() {
           border: "1px solid #e0e0e0"
         }}>
           <label style={{ display: "block", marginBottom: 8, fontWeight: "bold", fontSize: 14 }}>
-            🤖 Human Verification
+            🤖 人机验证
           </label>
           <div style={{
             display: "flex",
@@ -249,13 +249,13 @@ export default function Create() {
                 cursor: "pointer",
                 fontSize: 16
               }}
-              title="New Question"
+              title="换一题"
             >
               🔄
             </button>
           </div>
           <p style={{ fontSize: 12, color: "#999", marginTop: 8 }}>
-            💡 Please enter the calculation result to prevent automated attacks
+            💡 请输入计算结果，防止自动化攻击
           </p>
         </div>
       )}
@@ -287,7 +287,7 @@ export default function Create() {
           width: "100%"
         }}
       >
-        {loading ? "Encrypting..." : "🔐 Create Secret"}
+        {loading ? "加密中..." : "🔐 创建秘密"}
       </button>
 
       {result && (
@@ -298,7 +298,7 @@ export default function Create() {
           borderRadius: 8,
           border: "1px solid #bbdefb"
         }}>
-          <h3 style={{ margin: "0 0 16px 0", color: "#1565c0" }}>✅ Secret Created Successfully!</h3>
+          <h3 style={{ margin: "0 0 16px 0", color: "#1565c0" }}>✅ 秘密创建成功！</h3>
           
           <div style={{
             padding: 16,
@@ -308,7 +308,7 @@ export default function Create() {
             marginBottom: 16
           }}>
             <p style={{ margin: "0 0 8px 0", fontSize: 14, color: "#666" }}>
-              📋 Secret ID (copy this ID)
+              📋 秘密编号（复制这个编号）
             </p>
             <div style={{
               display: "flex",
@@ -340,7 +340,7 @@ export default function Create() {
                   fontSize: 14
                 }}
               >
-                📋 Copy
+                📋 复制
               </button>
             </div>
           </div>
@@ -352,29 +352,23 @@ export default function Create() {
             border: "1px solid #ffe0b2"
           }}>
             <p style={{ margin: "0 0 8px 0", fontSize: 14, color: "#e65100", fontWeight: "bold" }}>
-              ⚠️ Important Notice
+              ⚠️ 重要提示
             </p>
             <ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, color: "#666", lineHeight: 1.8 }}>
-<<<<<<< HEAD
-              <li>Please make sure to write down your <strong>Secret ID</strong> and <strong>Password</strong></li>
-              <li>You can only unlock the secret by entering both the ID and password</li>
-              <li>Neither the ID nor the password can be recovered. Please keep them safe!</li>
-=======
               <li>请务必记下你的<strong>秘密编号</strong>和<strong>密码</strong></li>
               <li>只有输入编号和密码才可解锁秘密</li>
               <li>密码编号和密码都无法找回，请妥善保管！</li>
->>>>>>> 84cb70c (Fix scrolling issue on create and unlock pages)
             </ul>
           </div>
 
-          {/* Bottom security notice */}
+          {/* 底部安全提示 */}
           <p style={{ 
             marginTop: 20, 
             fontSize: 13, 
             color: "#999",
             textAlign: "center"
           }}>
-            🔒 End-to-end encrypted · Passwords cannot be recovered · Please keep your ID and password safe
+            🔒 端到端加密 · 密码无法找回 · 请妥善保管编号和密码
           </p>
         </div>
       )}

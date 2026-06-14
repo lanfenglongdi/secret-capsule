@@ -21,12 +21,13 @@ export default function Home() {
         transform: "scale(1.05)",
         transformOrigin: "top center"
       }}>
-        {/* Title */}
+        {/* 标题 */}
         <h1 style={{ fontSize: 28, marginBottom: 8, fontWeight: 700, lineHeight: 1.2 }}>
-          🔐 Secret Capsule
+          🔐 Secret Capsule<br />
+          <span style={{ fontSize: 20 }}>秘密胶囊</span>
         </h1>
         
-        {/* Tagline - three lines */}
+        {/* 简洁标语 - 三行格式 */}
         <div style={{ 
           marginBottom: 20,
           maxWidth: 500,
@@ -40,7 +41,7 @@ export default function Home() {
             margin: 0,
             fontWeight: 500
           }}>
-            Leave important words for important people!
+            把重要的话，留给重要的人！
           </p>
           <p style={{ 
             fontSize: 14, 
@@ -49,7 +50,7 @@ export default function Home() {
             margin: "6px 0",
             fontWeight: 500
           }}>
-            Record important text or numbers for your future self!
+            把重要的文字或者数字记录下来，留给将来的自己！
           </p>
           <p style={{ 
             fontSize: 12, 
@@ -57,11 +58,11 @@ export default function Home() {
             lineHeight: 1.5,
             margin: "6px 0 0 0"
           }}>
-            All content is end-to-end encrypted. The server never stores plaintext.
+            所有内容端到端加密，服务器不存储明文。
           </p>
         </div>
         
-        {/* Action buttons - vertical layout */}
+        {/* 操作按钮区域 - 上下排列 */}
         <div style={{ 
           display: "flex", 
           flexDirection: "column",
@@ -82,7 +83,7 @@ export default function Home() {
               fontWeight: 500,
               width: "100%"
             }}>
-              ✨ Create Secret
+              ✨ 创建秘密
             </button>
           </a>
           <a href="/s/any" style={{ textDecoration: "none", width: 180 }}>
@@ -97,12 +98,12 @@ export default function Home() {
               fontWeight: 500,
               width: "100%"
             }}>
-              🔓 Unlock Secret
+              🔓 解锁秘密
             </button>
           </a>
         </div>
 
-        {/* Footer tips */}
+        {/* 底部提示 */}
         <div style={{ 
           marginTop: 15, 
           fontSize: 11, 
@@ -110,16 +111,10 @@ export default function Home() {
           lineHeight: 1.6
         }}>
           <p style={{ margin: 0 }}>
-            End-to-end encrypted. Passwords cannot be recovered.
+            端到端加密，密码无法找回，请妥善保管编号和密码！
           </p>
           <p style={{ margin: "3px 0 0 0" }}>
-            Please keep your ID and password safe!
-          </p>
-          <p style={{ margin: "3px 0 0 0" }}>
-            Your secret ID can be engraved on necklaces, rings, 
-          </p>
-          <p style={{ margin: "3px 0 0 0" }}>
-            or tattoos for permanent storage!
+            生成的秘密编号可以刻在项链、戒指或者纹身上，永久保存！
           </p>
         </div>
       </div>
