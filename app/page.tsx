@@ -110,10 +110,16 @@ export default function Home() {
           lineHeight: 1.6
         }}>
           <p style={{ margin: 0 }}>
-            End-to-end encrypted. Passwords cannot be recovered. Please keep your ID and password safe!
+            End-to-end encrypted. Passwords cannot be recovered.
           </p>
           <p style={{ margin: "3px 0 0 0" }}>
-            Your secret ID can be engraved on necklaces, rings, or tattoos for permanent storage!
+            Please keep your ID and password safe!
+          </p>
+          <p style={{ margin: "3px 0 0 0" }}>
+            Your secret ID can be engraved on necklaces, rings, 
+          </p>
+          <p style={{ margin: "3px 0 0 0" }}>
+            or tattoos for permanent storage!
           </p>
         </div>
       </div>
