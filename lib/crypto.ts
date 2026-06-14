@@ -1,12 +1,21 @@
 // 确保只在浏览器环境中使用 Web Crypto API
 function getCrypto() {
-  if (typeof window === 'undefined' || !window.crypto) {
-    throw new Error('Web Crypto API is not available in this environment');
+  // 严格检查是否在浏览器环境
+  if (typeof window === 'undefined') {
+    throw new Error('Encryption can only be performed in browser environment');
+  }
+  if (!window.crypto || !window.crypto.subtle) {
+    throw new Error('Web Crypto API is not available. Please use a modern browser.');
   }
   return window.crypto.subtle;
 }
 
 export async function encrypt(text: string, password: string) {
+  // 运行时检查
+  if (typeof window === 'undefined') {
+    throw new Error('encrypt() can only be called in browser environment');
+  }
+  
   const subtle = getCrypto();
   const enc = new TextEncoder();
 
@@ -53,6 +62,11 @@ export async function decrypt(
   iv: string,
   password: string
 ): Promise<string> {
+  // 运行时检查
+  if (typeof window === 'undefined') {
+    throw new Error('decrypt() can only be called in browser environment');
+  }
+  
   const subtle = getCrypto();
   const dec = new TextDecoder();
 

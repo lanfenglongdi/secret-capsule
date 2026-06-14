@@ -9,7 +9,7 @@ export default function UnlockPage() {
   const params = useParams();
   const idFromUrl = params?.id as string || "";
   
-  // 如果 URL 中的 ID 是 "any" 或其他占位符，则不预填充
+  // If the ID in URL is "any" or other placeholder, don't prefill
   const initialId = (idFromUrl && idFromUrl !== "any") ? decodeURIComponent(idFromUrl) : "";
   
   const [secretId, setSecretId] = useState(initialId);
@@ -19,21 +19,21 @@ export default function UnlockPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // 尝试从 sessionStorage 读取密码（如果从首页跳转过来）
+    // Try to read password from sessionStorage (if navigated from homepage)
     const savedPassword = sessionStorage.getItem('unlock_password');
     if (savedPassword) {
       setPassword(savedPassword);
-      sessionStorage.removeItem('unlock_password'); // 使用后清除
+      sessionStorage.removeItem('unlock_password'); // Clear after use
     }
   }, []);
 
   async function handleUnlock() {
     if (!secretId.trim()) {
-      setError("请输入秘密编号");
+      setError("Please enter the secret ID");
       return;
     }
     if (!password) {
-      setError("请输入密码");
+      setError("Please enter the password");
       return;
     }
 
@@ -42,28 +42,28 @@ export default function UnlockPage() {
     setDecryptedText(null);
 
     try {
-      // 从服务器获取加密数据
+      // Fetch encrypted data from server
       const res = await fetch(`/api/get?id=${encodeURIComponent(secretId.trim())}`);
       
       if (!res.ok) {
-        throw new Error("秘密不存在或已被删除");
+        throw new Error("Secret does not exist or has been deleted");
       }
 
       const data = await res.json();
 
       if (!data || !data.cipher) {
-        throw new Error("秘密不存在");
+        throw new Error("Secret does not exist");
       }
 
-      // 使用密码解密
+      // Decrypt with password
       const text = await decrypt(data.cipher, data.salt, data.iv, password);
       setDecryptedText(text);
     } catch (err: any) {
       console.error(err);
       if (err.message.includes("decrypt") || err.name === "OperationError") {
-        setError("密码错误，无法解密");
+        setError("Incorrect password, cannot decrypt");
       } else {
-        setError(err.message || "解密失败");
+        setError(err.message || "Decryption failed");
       }
     } finally {
       setLoading(false);
@@ -72,7 +72,7 @@ export default function UnlockPage() {
 
   return (
     <div style={{ padding: 40, maxWidth: 600, margin: "0 auto", position: "relative" }}>
-      {/* 首页链接 */}
+      {/* Home link */}
       <a 
         href="/" 
         style={{
@@ -87,21 +87,21 @@ export default function UnlockPage() {
         onMouseEnter={(e) => e.currentTarget.style.textDecoration = "underline"}
         onMouseLeave={(e) => e.currentTarget.style.textDecoration = "none"}
       >
-        🏠 首页
+        🏠 Home
       </a>
 
-      <h1>🔓 解锁秘密</h1>
+      <h1>🔓 Unlock Secret</h1>
       <p style={{ color: "#666", marginBottom: 30 }}>
-        输入秘密编号和密码来查看内容
+        Enter the secret ID and password to view the content
       </p>
 
       <div style={{ marginTop: 30 }}>
         <label style={{ display: "block", marginBottom: 8, fontWeight: "bold" }}>
-          秘密编号
+          Secret ID
         </label>
         <input
           type="text"
-          placeholder="例如：SC-ABC123"
+          placeholder="e.g., SC-ABC123"
           value={secretId}
           onChange={(e) => setSecretId(e.target.value)}
           style={{
@@ -117,11 +117,11 @@ export default function UnlockPage() {
 
       <div style={{ marginTop: 20 }}>
         <label style={{ display: "block", marginBottom: 8, fontWeight: "bold" }}>
-          密码
+          Password
         </label>
         <input
           type="password"
-          placeholder="输入解密密码"
+          placeholder="Enter decryption password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
@@ -152,7 +152,7 @@ export default function UnlockPage() {
           fontWeight: "bold"
         }}
       >
-        {loading ? "解密中..." : "🔐 立即解锁"}
+        {loading ? "Decrypting..." : "🔐 Unlock Now"}
       </button>
 
       {error && (
@@ -176,7 +176,7 @@ export default function UnlockPage() {
           borderRadius: 8,
           border: "1px solid #c8e6c9"
         }}>
-          <h3 style={{ margin: "0 0 16px 0", color: "#2e7d32" }}>✅ 秘密内容</h3>
+          <h3 style={{ margin: "0 0 16px 0", color: "#2e7d32" }}>✅ Secret Content</h3>
           <div style={{
             whiteSpace: "pre-wrap",
             wordBreak: "break-word",
