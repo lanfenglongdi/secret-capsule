@@ -1,13 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { encrypt } from "@/lib/crypto";
-
-interface CaptchaData {
-  question: string;
-  answer: number;
-  encoded: string;
-}
 
 export default function Create() {
   const [text, setText] = useState("");
@@ -15,65 +9,14 @@ export default function Create() {
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  
-  // Captcha state
-  const [captcha, setCaptcha] = useState<CaptchaData | null>(null);
-  const [captchaAnswer, setCaptchaAnswer] = useState("");
-  const [showCaptcha, setShowCaptcha] = useState(false);
-  
-  // Generate captcha
-  useEffect(() => {
-    generateNewCaptcha();
-  }, []);
-
-  function generateNewCaptcha() {
-    // Simple math problem generation
-    const operators = ['+', '-'];
-    const operator = operators[Math.floor(Math.random() * operators.length)];
-    
-    let a: number, b: number, answer: number;
-    
-    if (operator === '+') {
-      a = Math.floor(Math.random() * 15) + 1;
-      b = Math.floor(Math.random() * 15) + 1;
-      answer = a + b;
-    } else {
-      a = Math.floor(Math.random() * 10) + 10;
-      b = Math.floor(Math.random() * 9) + 1;
-      answer = a - b;
-    }
-    
-    const encoded = btoa(JSON.stringify({ a, b, op: operator, ans: answer }));
-    
-    setCaptcha({
-      question: `${a} ${operator} ${b} = ?`,
-      answer,
-      encoded
-    });
-    setCaptchaAnswer("");
-  }
 
   async function create() {
     if (!text.trim()) {
-      setError("Please enter your secret content");
+      setError("请输入秘密内容");
       return;
     }
     if (!password) {
-      setError("Please set a password");
-      return;
-    }
-    
-    // Verify captcha
-    if (!captcha) {
-      setError("Please complete the human verification");
-      generateNewCaptcha();
-      return;
-    }
-    
-    const userAnswer = parseInt(captchaAnswer);
-    if (isNaN(userAnswer) || userAnswer !== captcha.answer) {
-      setError("❌ Incorrect captcha answer, please recalculate");
-      generateNewCaptcha();
+      setError("请设置密码");
       return;
     }
 
@@ -88,35 +31,25 @@ export default function Create() {
       const res = await fetch("/api/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          id, 
-          ...encrypted,
-          captcha_token: captcha.encoded
-        })
+        body: JSON.stringify({ id, ...encrypted })
       });
 
       if (!res.ok) {
-        const errorData = await res.json();
-        if (res.status === 429) {
-          throw new Error("Too many requests, please try again later");
-        }
-        throw new Error(errorData.error || "Failed to save");
+        throw new Error("保存失败");
       }
 
       setResult(id);
-      setShowCaptcha(false);
-    } catch (err: any) {
-      setError(err.message || "Creation failed, please try again");
-      generateNewCaptcha(); // Refresh captcha
+    } catch (err) {
+      setError("创建失败，请重试");
     } finally {
       setLoading(false);
     }
   }
 
   function copyToClipboard() {
-    // Copy secret ID
+    // 复制秘密编号
     navigator.clipboard.writeText(result);
-    alert("Secret ID copied to clipboard!");
+    alert("秘密编号已复制到剪贴板！");
   }
 
   return (
@@ -124,37 +57,19 @@ export default function Create() {
       minHeight: "100vh",
       padding: 40, 
       maxWidth: 600, 
-      margin: "0 auto", 
-      position: "relative",
+      margin: "0 auto",
       overflowY: "auto",
       boxSizing: "border-box"
     }}>
-      {/* Decrypt link */}
-      <a 
-        href="/s/any" 
-        style={{
-          position: "absolute",
-          top: 20,
-          right: 40,
-          color: "#4caf50",
-          textDecoration: "none",
-          fontSize: 16,
-          fontWeight: 500
-        }}
-        onMouseEnter={(e) => e.currentTarget.style.textDecoration = "underline"}
-        onMouseLeave={(e) => e.currentTarget.style.textDecoration = "none"}
-      >
-        🔓 Decrypt
-      </a>
-
-      <h1>🔒 Create Secret</h1>
+      <h1>🔒 创建秘密</h1>
+      <p style={{ color: "#666" }}>将重要的话加密保存，生成专属访问链接</p>
 
       <div style={{ marginTop: 30 }}>
         <label style={{ display: "block", marginBottom: 8, fontWeight: "bold" }}>
-          Secret Content
+          秘密内容
         </label>
         <textarea
-          placeholder="Once created, secrets cannot be deleted or modified - they are stored forever&#10;&#10;Write down what you want to keep secret here..."
+          placeholder="在这里写下你想保密的话..."
           value={text}
           onChange={(e) => setText(e.target.value)}
           style={{
@@ -173,11 +88,11 @@ export default function Create() {
 
       <div style={{ marginTop: 20 }}>
         <label style={{ display: "block", marginBottom: 8, fontWeight: "bold" }}>
-          Set Password
+          设置密码
         </label>
         <input
           type="password"
-          placeholder="Set a strong password for encryption"
+          placeholder="设置一个强密码用于加密"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           style={{
@@ -190,75 +105,9 @@ export default function Create() {
           }}
         />
         <p style={{ fontSize: 12, color: "#999", marginTop: 4 }}>
-          ⚠️ Remember your password! It's required for decryption. End-to-end encrypted, passwords cannot be recovered.
+          ⚠️ 请记住密码！解密时需要使用，无法找回
         </p>
       </div>
-
-      {/* Human verification */}
-      {captcha && !result && (
-        <div style={{ 
-          marginTop: 20,
-          padding: 16,
-          backgroundColor: "#f5f5f5",
-          borderRadius: 8,
-          border: "1px solid #e0e0e0"
-        }}>
-          <label style={{ display: "block", marginBottom: 8, fontWeight: "bold", fontSize: 14 }}>
-            🤖 Human Verification
-          </label>
-          <div style={{
-            display: "flex",
-            gap: 12,
-            alignItems: "center"
-          }}>
-            <span style={{
-              fontSize: 20,
-              fontWeight: "bold",
-              fontFamily: "monospace",
-              backgroundColor: "white",
-              padding: "8px 16px",
-              borderRadius: 4,
-              border: "1px solid #ddd",
-              letterSpacing: 2
-            }}>
-              {captcha.question}
-            </span>
-            <input
-              type="number"
-              placeholder="?"
-              value={captchaAnswer}
-              onChange={(e) => setCaptchaAnswer(e.target.value)}
-              style={{
-                width: 80,
-                padding: 8,
-                fontSize: 18,
-                textAlign: "center",
-                border: "1px solid #ddd",
-                borderRadius: 4
-              }}
-              onKeyDown={(e) => e.key === 'Enter' && create()}
-            />
-            <button
-              onClick={generateNewCaptcha}
-              type="button"
-              style={{
-                padding: "8px 12px",
-                backgroundColor: "transparent",
-                border: "1px solid #999",
-                borderRadius: 4,
-                cursor: "pointer",
-                fontSize: 16
-              }}
-              title="New Question"
-            >
-              🔄
-            </button>
-          </div>
-          <p style={{ fontSize: 12, color: "#999", marginTop: 8 }}>
-            💡 Please enter the calculation result to prevent automated attacks
-          </p>
-        </div>
-      )}
 
       {error && (
         <div style={{
@@ -287,7 +136,7 @@ export default function Create() {
           width: "100%"
         }}
       >
-        {loading ? "Encrypting..." : "🔐 Create Secret"}
+        {loading ? "加密中..." : "🔐 创建秘密"}
       </button>
 
       {result && (
@@ -298,7 +147,7 @@ export default function Create() {
           borderRadius: 8,
           border: "1px solid #bbdefb"
         }}>
-          <h3 style={{ margin: "0 0 16px 0", color: "#1565c0" }}>✅ Secret Created Successfully!</h3>
+          <h3 style={{ margin: "0 0 16px 0", color: "#1565c0" }}>✅ 秘密创建成功！</h3>
           
           <div style={{
             padding: 16,
@@ -308,7 +157,7 @@ export default function Create() {
             marginBottom: 16
           }}>
             <p style={{ margin: "0 0 8px 0", fontSize: 14, color: "#666" }}>
-              📋 Secret ID (copy this ID)
+              📋 秘密编号（复制这个编号）
             </p>
             <div style={{
               display: "flex",
@@ -340,7 +189,7 @@ export default function Create() {
                   fontSize: 14
                 }}
               >
-                📋 Copy
+                📋 复制
               </button>
             </div>
           </div>
@@ -352,24 +201,15 @@ export default function Create() {
             border: "1px solid #ffe0b2"
           }}>
             <p style={{ margin: "0 0 8px 0", fontSize: 14, color: "#e65100", fontWeight: "bold" }}>
-              ⚠️ Important Notice
+              ⚠️ 重要提示
             </p>
             <ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, color: "#666", lineHeight: 1.8 }}>
-              <li>请务必记下你的<strong>秘密编号</strong>和<strong>密码</strong></li>
-              <li>只有输入编号和密码才可解锁秘密</li>
-              <li>密码编号和密码都无法找回，请妥善保管！</li>
+              <li>请记下你的<strong>秘密编号</strong>和<strong>密码</strong></li>
+              <li>将这两个信息告诉对方</li>
+              <li>对方在首页输入编号和密码即可解锁</li>
+              <li>密码无法找回，请妥善保管！</li>
             </ul>
           </div>
-
-          {/* Bottom security notice */}
-          <p style={{ 
-            marginTop: 20, 
-            fontSize: 13, 
-            color: "#999",
-            textAlign: "center"
-          }}>
-            🔒 End-to-end encrypted · Passwords cannot be recovered · Please keep your ID and password safe
-          </p>
         </div>
       )}
     </div>
