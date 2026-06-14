@@ -1,25 +1,7 @@
-// 确保只在浏览器环境中使用 Web Crypto API
-function getCrypto() {
-  // 严格检查是否在浏览器环境
-  if (typeof window === 'undefined') {
-    throw new Error('Encryption can only be performed in browser environment');
-  }
-  if (!window.crypto || !window.crypto.subtle) {
-    throw new Error('Web Crypto API is not available. Please use a modern browser.');
-  }
-  return window.crypto.subtle;
-}
-
 export async function encrypt(text: string, password: string) {
-  // 运行时检查
-  if (typeof window === 'undefined') {
-    throw new Error('encrypt() can only be called in browser environment');
-  }
-  
-  const subtle = getCrypto();
   const enc = new TextEncoder();
 
-  const keyMaterial = await subtle.importKey(
+  const keyMaterial = await crypto.subtle.importKey(
     "raw",
     enc.encode(password),
     "PBKDF2",
@@ -27,10 +9,10 @@ export async function encrypt(text: string, password: string) {
     ["deriveKey"]
   );
 
-  const salt = window.crypto.getRandomValues(new Uint8Array(16));
-  const iv = window.crypto.getRandomValues(new Uint8Array(12));
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
 
-  const key = await subtle.deriveKey(
+  const key = await crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
       salt,
@@ -43,7 +25,7 @@ export async function encrypt(text: string, password: string) {
     ["encrypt"]
   );
 
-  const encrypted = await subtle.encrypt(
+  const encrypted = await crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
     key,
     enc.encode(text)
@@ -62,12 +44,6 @@ export async function decrypt(
   iv: string,
   password: string
 ): Promise<string> {
-  // 运行时检查
-  if (typeof window === 'undefined') {
-    throw new Error('decrypt() can only be called in browser environment');
-  }
-  
-  const subtle = getCrypto();
   const dec = new TextDecoder();
 
   // 将 base64 字符串转换回 Uint8Array
@@ -76,7 +52,7 @@ export async function decrypt(
   const ivBytes = Uint8Array.from(atob(iv), c => c.charCodeAt(0));
 
   // 从密码派生密钥
-  const keyMaterial = await subtle.importKey(
+  const keyMaterial = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(password),
     "PBKDF2",
@@ -84,7 +60,7 @@ export async function decrypt(
     ["deriveKey"]
   );
 
-  const key = await subtle.deriveKey(
+  const key = await crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
       salt: saltBytes,
@@ -98,7 +74,7 @@ export async function decrypt(
   );
 
   // 解密密文
-  const decrypted = await subtle.decrypt(
+  const decrypted = await crypto.subtle.decrypt(
     { name: "AES-GCM", iv: ivBytes },
     key,
     cipherBytes
