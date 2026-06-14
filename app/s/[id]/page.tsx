@@ -1,14 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { decrypt } from "@/lib/crypto";
 
 export default function UnlockPage() {
+  const router = useRouter();
   const params = useParams();
   const idFromUrl = params?.id as string || "";
   
-  const [secretId, setSecretId] = useState(decodeURIComponent(idFromUrl));
+  // 如果 URL 中的 ID 是 "any" 或其他占位符，则不预填充
+  const initialId = (idFromUrl && idFromUrl !== "any") ? decodeURIComponent(idFromUrl) : "";
+  
+  const [secretId, setSecretId] = useState(initialId);
   const [password, setPassword] = useState("");
   const [decryptedText, setDecryptedText] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -67,7 +71,25 @@ export default function UnlockPage() {
   }
 
   return (
-    <div style={{ padding: 40, maxWidth: 600, margin: "0 auto" }}>
+    <div style={{ padding: 40, maxWidth: 600, margin: "0 auto", position: "relative" }}>
+      {/* 首页链接 */}
+      <a 
+        href="/" 
+        style={{
+          position: "absolute",
+          top: 20,
+          right: 40,
+          color: "#0070f3",
+          textDecoration: "none",
+          fontSize: 16,
+          fontWeight: 500
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.textDecoration = "underline"}
+        onMouseLeave={(e) => e.currentTarget.style.textDecoration = "none"}
+      >
+        🏠 首页
+      </a>
+
       <h1>🔓 解锁秘密</h1>
       <p style={{ color: "#666", marginBottom: 30 }}>
         输入秘密编号和密码来查看内容

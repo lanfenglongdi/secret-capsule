@@ -1,7 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { encrypt } from "@/lib/crypto";
+
+interface CaptchaData {
+  question: string;
+  answer: number;
+  encoded: string;
+}
 
 export default function Create() {
   const [text, setText] = useState("");
@@ -9,6 +15,43 @@ export default function Create() {
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  
+  // 验证码状态
+  const [captcha, setCaptcha] = useState<CaptchaData | null>(null);
+  const [captchaAnswer, setCaptchaAnswer] = useState("");
+  const [showCaptcha, setShowCaptcha] = useState(false);
+  
+  // 生成验证码
+  useEffect(() => {
+    generateNewCaptcha();
+  }, []);
+
+  function generateNewCaptcha() {
+    // 简单的数学题生成
+    const operators = ['+', '-'];
+    const operator = operators[Math.floor(Math.random() * operators.length)];
+    
+    let a: number, b: number, answer: number;
+    
+    if (operator === '+') {
+      a = Math.floor(Math.random() * 15) + 1;
+      b = Math.floor(Math.random() * 15) + 1;
+      answer = a + b;
+    } else {
+      a = Math.floor(Math.random() * 10) + 10;
+      b = Math.floor(Math.random() * 9) + 1;
+      answer = a - b;
+    }
+    
+    const encoded = btoa(JSON.stringify({ a, b, op: operator, ans: answer }));
+    
+    setCaptcha({
+      question: `${a} ${operator} ${b} = ?`,
+      answer,
+      encoded
+    });
+    setCaptchaAnswer("");
+  }
 
   async function create() {
     if (!text.trim()) {
@@ -17,6 +60,20 @@ export default function Create() {
     }
     if (!password) {
       setError("请设置密码");
+      return;
+    }
+    
+    // 验证验证码
+    if (!captcha) {
+      setError("请完成人机验证");
+      generateNewCaptcha();
+      return;
+    }
+    
+    const userAnswer = parseInt(captchaAnswer);
+    if (isNaN(userAnswer) || userAnswer !== captcha.answer) {
+      setError("❌ 验证码答案错误，请重新计算");
+      generateNewCaptcha();
       return;
     }
 
@@ -31,16 +88,26 @@ export default function Create() {
       const res = await fetch("/api/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, ...encrypted })
+        body: JSON.stringify({ 
+          id, 
+          ...encrypted,
+          captcha_token: captcha.encoded
+        })
       });
 
       if (!res.ok) {
-        throw new Error("保存失败");
+        const errorData = await res.json();
+        if (res.status === 429) {
+          throw new Error("请求过于频繁，请稍后再试");
+        }
+        throw new Error(errorData.error || "保存失败");
       }
 
       setResult(id);
-    } catch (err) {
-      setError("创建失败，请重试");
+      setShowCaptcha(false);
+    } catch (err: any) {
+      setError(err.message || "创建失败，请重试");
+      generateNewCaptcha(); // 刷新验证码
     } finally {
       setLoading(false);
     }
@@ -53,9 +120,26 @@ export default function Create() {
   }
 
   return (
-    <div style={{ padding: 40, maxWidth: 600, margin: "0 auto" }}>
+    <div style={{ padding: 40, maxWidth: 600, margin: "0 auto", position: "relative" }}>
+      {/* 解密链接 */}
+      <a 
+        href="/s/any" 
+        style={{
+          position: "absolute",
+          top: 20,
+          right: 40,
+          color: "#4caf50",
+          textDecoration: "none",
+          fontSize: 16,
+          fontWeight: 500
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.textDecoration = "underline"}
+        onMouseLeave={(e) => e.currentTarget.style.textDecoration = "none"}
+      >
+        🔓 解密
+      </a>
+
       <h1>🔒 创建秘密</h1>
-      <p style={{ color: "#666" }}>将重要的话加密保存，生成专属访问链接</p>
 
       <div style={{ marginTop: 30 }}>
         <label style={{ display: "block", marginBottom: 8, fontWeight: "bold" }}>
@@ -98,9 +182,75 @@ export default function Create() {
           }}
         />
         <p style={{ fontSize: 12, color: "#999", marginTop: 4 }}>
-          ⚠️ 请记住密码！解密时需要使用，无法找回
+          ⚠️ 请记住密码！解密时需要使用，端到端加密，密码无法找回。
         </p>
       </div>
+
+      {/* 人机验证 */}
+      {captcha && !result && (
+        <div style={{ 
+          marginTop: 20,
+          padding: 16,
+          backgroundColor: "#f5f5f5",
+          borderRadius: 8,
+          border: "1px solid #e0e0e0"
+        }}>
+          <label style={{ display: "block", marginBottom: 8, fontWeight: "bold", fontSize: 14 }}>
+            🤖 人机验证
+          </label>
+          <div style={{
+            display: "flex",
+            gap: 12,
+            alignItems: "center"
+          }}>
+            <span style={{
+              fontSize: 20,
+              fontWeight: "bold",
+              fontFamily: "monospace",
+              backgroundColor: "white",
+              padding: "8px 16px",
+              borderRadius: 4,
+              border: "1px solid #ddd",
+              letterSpacing: 2
+            }}>
+              {captcha.question}
+            </span>
+            <input
+              type="number"
+              placeholder="?"
+              value={captchaAnswer}
+              onChange={(e) => setCaptchaAnswer(e.target.value)}
+              style={{
+                width: 80,
+                padding: 8,
+                fontSize: 18,
+                textAlign: "center",
+                border: "1px solid #ddd",
+                borderRadius: 4
+              }}
+              onKeyDown={(e) => e.key === 'Enter' && create()}
+            />
+            <button
+              onClick={generateNewCaptcha}
+              type="button"
+              style={{
+                padding: "8px 12px",
+                backgroundColor: "transparent",
+                border: "1px solid #999",
+                borderRadius: 4,
+                cursor: "pointer",
+                fontSize: 16
+              }}
+              title="换一题"
+            >
+              🔄
+            </button>
+          </div>
+          <p style={{ fontSize: 12, color: "#999", marginTop: 8 }}>
+            💡 请输入计算结果，防止自动化攻击
+          </p>
+        </div>
+      )}
 
       {error && (
         <div style={{
@@ -203,6 +353,16 @@ export default function Create() {
               <li>密码无法找回，请妥善保管！</li>
             </ul>
           </div>
+
+          {/* 底部安全提示 */}
+          <p style={{ 
+            marginTop: 20, 
+            fontSize: 13, 
+            color: "#999",
+            textAlign: "center"
+          }}>
+            🔒 端到端加密 · 密码无法找回 · 请妥善保管编号和密码
+          </p>
         </div>
       )}
     </div>
