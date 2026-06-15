@@ -1,6 +1,40 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import { createClient } from "@supabase/supabase-js";
+
 export default function Home() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState<string>("");
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  async function checkAuthStatus() {
+    try {
+      const supabaseAuth = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_KEY!
+      );
+      
+      const { data: { session } } = await supabaseAuth.auth.getSession();
+      setIsLoggedIn(!!session);
+      if (session?.user?.email) {
+        // 隐藏部分邮箱，只显示前缀
+        const email = session.user.email;
+        const [prefix, domain] = email.split('@');
+        const maskedPrefix = prefix.length > 3 ? prefix.substring(0, 3) + '***' : prefix;
+        setUserEmail(`${maskedPrefix}@${domain}`);
+      }
+    } catch (err) {
+      console.error("检查登录状态失败", err);
+    } finally {
+      setCheckingAuth(false);
+    }
+  }
+
   return (
     <main style={{ 
       minHeight: "100vh",
@@ -101,7 +135,100 @@ export default function Home() {
               🔓 解锁秘密
             </button>
           </a>
+          <a href="/delete/any" style={{ textDecoration: "none", width: 180 }}>
+            <button style={{
+              padding: "12px 24px",
+              fontSize: 15,
+              backgroundColor: "#ff5722",
+              color: "white",
+              border: "none",
+              borderRadius: 8,
+              cursor: "pointer",
+              fontWeight: 500,
+              width: "100%"
+            }}>
+              🗑️ 删除秘密
+            </button>
+          </a>
         </div>
+
+        {/* 会员区域 - 根据登录状态显示不同内容 */}
+        {!checkingAuth && (
+          <div style={{ 
+            marginTop: 20,
+            padding: "16px 24px",
+            backgroundColor: isLoggedIn ? "#e8f5e9" : "#fff3e0",
+            borderRadius: 8,
+            border: isLoggedIn ? "1px solid #c8e6c9" : "1px solid #ffe0b2",
+            maxWidth: 400,
+            margin: "20px auto 15px auto"
+          }}>
+            <p style={{ 
+              margin: "0 0 12px 0", 
+              fontSize: 14, 
+              color: isLoggedIn ? "#2e7d32" : "#e65100",
+              fontWeight: "bold"
+            }}>
+              {isLoggedIn ? `${userEmail} ✅ 已登录` : "👑 会员中心"}
+            </p>
+            <div style={{
+              display: "flex",
+              gap: 12,
+              justifyContent: "center"
+            }}>
+              {isLoggedIn ? (
+                <a 
+                  href="/profile" 
+                  style={{
+                    padding: "8px 20px",
+                    fontSize: 14,
+                    backgroundColor: "#4caf50",
+                    color: "white",
+                    border: "none",
+                    borderRadius: 6,
+                    textDecoration: "none",
+                    fontWeight: 500
+                  }}
+                >
+                  👤 个人中心
+                </a>
+              ) : (
+                <>
+                  <a 
+                    href="/register" 
+                    style={{
+                      padding: "8px 20px",
+                      fontSize: 14,
+                      backgroundColor: "#ff9800",
+                      color: "white",
+                      border: "none",
+                      borderRadius: 6,
+                      textDecoration: "none",
+                      fontWeight: 500
+                    }}
+                  >
+                    📧 注册会员
+                  </a>
+                  <a 
+                    href="/login" 
+                    style={{
+                      padding: "8px 20px",
+                      fontSize: 14,
+                      backgroundColor: "transparent",
+                      color: "#0070f3",
+                      border: "1px solid #0070f3",
+                      borderRadius: 6,
+                      textDecoration: "none",
+                      fontWeight: 500
+                    }}
+                  >
+                    🔐 登录
+                  </a>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* 底部提示 */}
         <div style={{ 

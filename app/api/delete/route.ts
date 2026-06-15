@@ -75,8 +75,23 @@ export async function POST(req: Request) {
       );
     }
 
-    console.log(`[Success] 秘密删除成功: ${body.id}`);
-    return NextResponse.json({ ok: true, message: "秘密已删除" });
+    // 6. 验证删除是否成功（确认数据库中已无此记录）
+    const { data: verifyData, error: verifyError } = await supabase
+      .from("secrets")
+      .select("id")
+      .eq("id", body.id)
+      .single();
+
+    if (verifyData) {
+      console.error("[Verification Failed] 删除后仍能查询到记录:", body.id);
+      return NextResponse.json(
+        { error: "删除验证失败，请重试", code: "VERIFICATION_FAILED" },
+        { status: 500 }
+      );
+    }
+
+    console.log(`[Success] 秘密已彻底删除: ${body.id}`);
+    return NextResponse.json({ ok: true, message: "秘密已彻底删除，所有痕迹已清除" });
 
   } catch (error) {
     console.error("[Server Error]", error);

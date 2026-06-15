@@ -129,14 +129,14 @@ export default function Create() {
       overflowY: "auto",
       boxSizing: "border-box"
     }}>
-      {/* 解密链接 */}
+      {/* 首页链接 */}
       <a 
-        href="/s/any" 
+        href="/" 
         style={{
           position: "absolute",
           top: 20,
           right: 40,
-          color: "#4caf50",
+          color: "#0070f3",
           textDecoration: "none",
           fontSize: 16,
           fontWeight: 500
@@ -144,7 +144,7 @@ export default function Create() {
         onMouseEnter={(e) => e.currentTarget.style.textDecoration = "underline"}
         onMouseLeave={(e) => e.currentTarget.style.textDecoration = "none"}
       >
-        🔓 解密
+        🏠 首页
       </a>
 
       <h1>🔒 创建秘密</h1>
@@ -154,7 +154,7 @@ export default function Create() {
           秘密内容
         </label>
         <textarea
-          placeholder="秘密一旦创建,任何人不可删除，不可修改，永远保存&#10;&#10;在这里写下你想保密的话..."
+          placeholder="在这里写下你想保密的话…"
           value={text}
           onChange={(e) => setText(e.target.value)}
           style={{

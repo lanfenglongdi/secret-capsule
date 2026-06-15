@@ -17,9 +17,6 @@ export default function UnlockPage() {
   const [decryptedText, setDecryptedText] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     // 尝试从 sessionStorage 读取密码（如果从首页跳转过来）
@@ -70,45 +67,6 @@ export default function UnlockPage() {
       }
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleDelete() {
-    if (!secretId.trim()) {
-      setDeleteError("请输入秘密编号");
-      return;
-    }
-
-    setDeleteLoading(true);
-    setDeleteError(null);
-
-    try {
-      const res = await fetch("/api/delete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: secretId.trim(),
-          password: password || "" // 密码可选，仅用于前端提示
-        })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "删除失败");
-      }
-
-      alert("✅ 秘密已成功删除！");
-      // 清除状态
-      setSecretId("");
-      setPassword("");
-      setDecryptedText(null);
-      setShowDeleteConfirm(false);
-    } catch (err: any) {
-      console.error(err);
-      setDeleteError(err.message || "删除失败，请重试");
-    } finally {
-      setDeleteLoading(false);
     }
   }
 
@@ -238,99 +196,6 @@ export default function UnlockPage() {
             border: "1px solid #c8e6c9"
           }}>
             {decryptedText}
-          </div>
-          
-          {/* 删除按钮 */}
-          <div style={{
-            marginTop: 20,
-            paddingTop: 20,
-            borderTop: "1px solid #c8e6c9"
-          }}>
-            {!showDeleteConfirm ? (
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                style={{
-                  padding: "10px 20px",
-                  fontSize: 14,
-                  backgroundColor: "#ff5722",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 6,
-                  cursor: "pointer",
-                  fontWeight: "bold"
-                }}
-              >
-                🗑️ 删除此秘密
-              </button>
-            ) : (
-              <div style={{
-                padding: 16,
-                backgroundColor: "#fff3e0",
-                borderRadius: 6,
-                border: "1px solid #ffe0b2"
-              }}>
-                <p style={{ margin: "0 0 12px 0", fontSize: 14, color: "#e65100", fontWeight: "bold" }}>
-                  ⚠️ 确认删除？
-                </p>
-                <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#666" }}>
-                  此操作不可恢复！删除后无法恢复秘密内容。
-                </p>
-                {password && (
-                  <p style={{ margin: "0 0 12px 0", fontSize: 12, color: "#999" }}>
-                    💡 提示：您已输入密码，将一并提交用于记录（服务器端不验证）
-                  </p>
-                )}
-                {deleteError && (
-                  <div style={{
-                    marginBottom: 12,
-                    padding: 8,
-                    backgroundColor: "#ffebee",
-                    color: "#c62828",
-                    borderRadius: 4,
-                    fontSize: 13
-                  }}>
-                    ❌ {deleteError}
-                  </div>
-                )}
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button
-                    onClick={handleDelete}
-                    disabled={deleteLoading}
-                    style={{
-                      flex: 1,
-                      padding: "10px 16px",
-                      fontSize: 14,
-                      backgroundColor: deleteLoading ? "#ccc" : "#d32f2f",
-                      color: "white",
-                      border: "none",
-                      borderRadius: 4,
-                      cursor: deleteLoading ? "not-allowed" : "pointer",
-                      fontWeight: "bold"
-                    }}
-                  >
-                    {deleteLoading ? "删除中..." : "确认删除"}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowDeleteConfirm(false);
-                      setDeleteError(null);
-                    }}
-                    style={{
-                      flex: 1,
-                      padding: "10px 16px",
-                      fontSize: 14,
-                      backgroundColor: "transparent",
-                      color: "#666",
-                      border: "1px solid #ddd",
-                      borderRadius: 4,
-                      cursor: "pointer"
-                    }}
-                  >
-                    取消
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}
