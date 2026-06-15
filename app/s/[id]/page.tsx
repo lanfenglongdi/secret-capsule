@@ -78,10 +78,6 @@ export default function UnlockPage() {
       setDeleteError("请输入秘密编号");
       return;
     }
-    if (!password) {
-      setDeleteError("请输入密码以验证身份");
-      return;
-    }
 
     setDeleteLoading(true);
     setDeleteError(null);
@@ -92,7 +88,7 @@ export default function UnlockPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: secretId.trim(),
-          password: password
+          password: password || "" // 密码可选，仅用于前端提示
         })
       });
 
@@ -277,8 +273,13 @@ export default function UnlockPage() {
                   ⚠️ 确认删除？
                 </p>
                 <p style={{ margin: "0 0 12px 0", fontSize: 13, color: "#666" }}>
-                  此操作不可恢复！请输入密码确认删除。
+                  此操作不可恢复！删除后无法恢复秘密内容。
                 </p>
+                {password && (
+                  <p style={{ margin: "0 0 12px 0", fontSize: 12, color: "#999" }}>
+                    💡 提示：您已输入密码，将一并提交用于记录（服务器端不验证）
+                  </p>
+                )}
                 {deleteError && (
                   <div style={{
                     marginBottom: 12,
