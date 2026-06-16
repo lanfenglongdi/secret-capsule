@@ -4,10 +4,15 @@ import { useState, useRef, useEffect } from "react";
 
 export default function FloatingSupport() {
   const [isOpen, setIsOpen] = useState(false);
-  const [position, setPosition] = useState({ x: window.innerWidth - 52, y: window.innerHeight / 2 });
+  const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef({ x: 0, y: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
+
+  // 初始化位置（客户端渲染后）
+  useEffect(() => {
+    setPosition({ x: window.innerWidth - 52, y: window.innerHeight / 2 });
+  }, []);
 
   // 开始拖动
   const handleMouseDown = (e: React.MouseEvent) => {
