@@ -295,10 +295,11 @@ export default function AdminDashboardPage() {
               {searchTerm ? "没有找到匹配的秘密" : "暂无秘密数据"}
             </div>
           ) : (
-            <div style={{ maxHeight: 600, overflowY: "auto" }}>
+            <div style={{ maxHeight: 600, overflowY: "auto", overflowX: "auto" }}>
               <table style={{
                 width: "100%",
-                borderCollapse: "collapse"
+                borderCollapse: "collapse",
+                minWidth: "800px"
               }}>
                 <thead>
                   <tr style={{ backgroundColor: "#f9f9f9" }}>
