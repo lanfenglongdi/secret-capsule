@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { encrypt } from "@/lib/crypto";
+import FloatingSupport from "@/components/FloatingSupport";
 
 interface CaptchaData {
   question: string;
@@ -74,6 +75,18 @@ export default function Create() {
     if (isNaN(userAnswer) || userAnswer !== captcha.answer) {
       setError("❌ 验证码答案错误，请重新计算");
       generateNewCaptcha();
+      return;
+    }
+
+    // 显示保存期限提醒
+    const confirmed = window.confirm(
+      "⚠️ 重要提示\n\n" +
+      "当前创建的秘密默认保存为一个月。\n\n" +
+      "如需升级为永久保存，请联系右侧客服。\n\n" +
+      "是否继续创建？"
+    );
+    
+    if (!confirmed) {
       return;
     }
 
@@ -372,6 +385,7 @@ export default function Create() {
           </p>
         </div>
       )}
+      <FloatingSupport />
     </div>
   );
 }

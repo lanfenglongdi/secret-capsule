@@ -9,15 +9,24 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
 
+  if (!id) {
+    return NextResponse.json(
+      { error: "缺少秘密编号" },
+      { status: 400 }
+    );
+  }
+
+  // 查询必要字段，包括保存期限信息
   const { data, error } = await supabase
     .from("secrets")
-    .select("*")
+    .select("id, cipher, salt, iv, retention_period, expires_at")
     .eq("id", id)
     .single();
 
   if (error || !data) {
+    console.error("[Get Secret Error]", error);
     return NextResponse.json(
-      { error: "秘密不存在" },
+      { error: "秘密不存在或已被删除" },
       { status: 404 }
     );
   }

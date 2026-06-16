@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { decrypt } from "@/lib/crypto";
+import FloatingSupport from "@/components/FloatingSupport";
 
 export default function UnlockPage() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function UnlockPage() {
   const [secretId, setSecretId] = useState(initialId);
   const [password, setPassword] = useState("");
   const [decryptedText, setDecryptedText] = useState<string | null>(null);
+  const [retentionInfo, setRetentionInfo] = useState<{ period: string | null; expiresAt: string | null } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -40,24 +42,33 @@ export default function UnlockPage() {
     setLoading(true);
     setError(null);
     setDecryptedText(null);
+    setRetentionInfo(null);
 
     try {
       // 从服务器获取加密数据
       const res = await fetch(`/api/get?id=${encodeURIComponent(secretId.trim())}`);
       
       if (!res.ok) {
-        throw new Error("秘密不存在或已被删除");
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "秘密不存在或已被删除");
       }
 
       const data = await res.json();
+      console.log("[Unlock] 获取到的数据:", data);
 
       if (!data || !data.cipher) {
-        throw new Error("秘密不存在");
+        throw new Error("秘密数据不完整");
       }
 
       // 使用密码解密
       const text = await decrypt(data.cipher, data.salt, data.iv, password);
       setDecryptedText(text);
+      
+      // 保存保存期限信息
+      setRetentionInfo({
+        period: data.retention_period,
+        expiresAt: data.expires_at
+      });
     } catch (err: any) {
       console.error(err);
       if (err.message.includes("decrypt") || err.name === "OperationError") {
@@ -68,6 +79,38 @@ export default function UnlockPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  // 格式化过期时间显示
+  function formatExpirationDate(expiresAt: string | null): string {
+    if (!expiresAt) return '未知';
+    
+    const expDate = new Date(expiresAt);
+    const now = new Date();
+    
+    // 格式化为中文日期时间
+    const year = expDate.getFullYear();
+    const month = String(expDate.getMonth() + 1).padStart(2, '0');
+    const day = String(expDate.getDate()).padStart(2, '0');
+    const hours = String(expDate.getHours()).padStart(2, '0');
+    const minutes = String(expDate.getMinutes()).padStart(2, '0');
+    const seconds = String(expDate.getSeconds()).padStart(2, '0');
+    
+    return `${year}年${month}月${day}日 ${hours}:${minutes}:${seconds}`;
+  }
+  
+  // 计算剩余天数
+  function getRemainingDays(expiresAt: string | null): string {
+    if (!expiresAt) return '';
+    
+    const expDate = new Date(expiresAt);
+    const now = new Date();
+    const diffMs = expDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) return '（已过期）';
+    if (diffDays === 0) return '（今天过期）';
+    return `（还剩${diffDays}天）`;
   }
 
   return (
@@ -185,6 +228,30 @@ export default function UnlockPage() {
           border: "1px solid #c8e6c9"
         }}>
           <h3 style={{ margin: "0 0 16px 0", color: "#2e7d32" }}>✅ 秘密内容</h3>
+          
+          {/* 过期时间信息 */}
+          {retentionInfo && retentionInfo.expiresAt && (
+            <div style={{
+              marginBottom: 16,
+              padding: 12,
+              backgroundColor: "#fff3e0",
+              borderRadius: 6,
+              border: "1px solid #ffe0b2",
+              fontSize: 14,
+              color: "#e65100",
+              lineHeight: 1.8
+            }}>
+              <strong>📅 此秘密过期时间：</strong>
+              <span style={{ color: "#666", fontSize: 13 }}>（联系右侧客服，升级为永久保存）</span>
+              <div style={{ marginTop: 4 }}>
+                {formatExpirationDate(retentionInfo.expiresAt)}
+                <span style={{ marginLeft: 8, color: "#999" }}>
+                  {getRemainingDays(retentionInfo.expiresAt)}
+                </span>
+              </div>
+            </div>
+          )}
+          
           <div style={{
             whiteSpace: "pre-wrap",
             wordBreak: "break-word",
@@ -199,6 +266,7 @@ export default function UnlockPage() {
           </div>
         </div>
       )}
+      <FloatingSupport />
     </div>
   );
 }

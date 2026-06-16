@@ -133,19 +133,70 @@ export async function POST(req: Request) {
       );
     }
 
-    // 6. 保存到数据库
-    const { error } = await supabase.from("secrets").insert({
+    // 6. 计算过期时间（默认1个月）
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30天后
+
+    // 7. 验证加密数据完整性（防止保存损坏的数据）
+    try {
+      // 验证Base64格式
+      atob(body.cipher);
+      atob(body.salt);
+      atob(body.iv);
+    } catch (e) {
+      console.error("[Validation Error] 加密数据格式错误", e);
+      return NextResponse.json(
+        { error: "加密数据格式错误，请重试", code: "INVALID_ENCRYPTION" },
+        { status: 400 }
+      );
+    }
+
+    // 5. 保存到数据库，记录创建人IP
+    const { error, data } = await supabase.from("secrets").insert({
       id: body.id,
       cipher: body.cipher,
       salt: body.salt,
       iv: body.iv,
-      created_at: new Date().toISOString()
-    });
+      created_at: now.toISOString(),
+      retention_period: '1month',
+      expires_at: expiresAt.toISOString(),
+      created_by: clientIP
+    }).select();
 
     if (error) {
       console.error("[Database Error]", error);
+      console.error("[Error Details]", JSON.stringify(error, null, 2));
+      
+      // 如果是字段不存在的错误，尝试使用最小字段集保存
+      if (error.message.includes('created_by') || 
+          error.message.includes('retention_period') || 
+          error.message.includes('expires_at') ||
+          error.message.includes('column') ||
+          error.message.includes('schema cache')) {
+        
+        console.log("[Fallback] 尝试使用基础字段保存");
+        const { error: retryError } = await supabase.from("secrets").insert({
+          id: body.id,
+          cipher: body.cipher,
+          salt: body.salt,
+          iv: body.iv,
+          created_at: now.toISOString()
+        });
+        
+        if (retryError) {
+          console.error("[Retry Database Error]", retryError);
+          return NextResponse.json(
+            { error: `保存失败: ${retryError.message}`, code: "DATABASE_ERROR" },
+            { status: 500 }
+          );
+        }
+        
+        console.log(`[Success] 秘密创建成功（基础字段）: ${body.id} (IP: ${clientIP})`);
+        return NextResponse.json({ ok: true, id: body.id });
+      }
+      
       return NextResponse.json(
-        { error: "保存失败，请重试", code: "DATABASE_ERROR" },
+        { error: `保存失败: ${error.message}`, code: "DATABASE_ERROR" },
         { status: 500 }
       );
     }
