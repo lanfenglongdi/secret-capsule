@@ -142,9 +142,9 @@ export default function Create() {
       overflowY: "auto",
       boxSizing: "border-box"
     }}>
-      {/* 首页链接 */}
+      {/* 解密链接 */}
       <a 
-        href="/" 
+        href="/s/any" 
         style={{
           position: "absolute",
           top: 20,
@@ -157,7 +157,7 @@ export default function Create() {
         onMouseEnter={(e) => e.currentTarget.style.textDecoration = "underline"}
         onMouseLeave={(e) => e.currentTarget.style.textDecoration = "none"}
       >
-        🏠 首页
+        🔓 解密
       </a>
 
       <h1>🔒 创建秘密</h1>
