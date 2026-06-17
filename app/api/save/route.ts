@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { dualInsert } from "@/lib/dual-database";
 
 // IP 限流存储 (生产环境建议使用 Redis)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -118,26 +118,11 @@ export async function POST(req: Request) {
       );
     }
 
-    // 5. 检查 ID 是否已存在
-    const { data: existing } = await supabase
-      .from("secrets")
-      .select("id")
-      .eq("id", body.id)
-      .single();
-
-    // 如果 ID 已存在，拒绝重复提交
-    if (existing) {
-      return NextResponse.json(
-        { error: "该秘密编号已存在", code: "DUPLICATE_ID" },
-        { status: 409 }
-      );
-    }
-
-    // 6. 计算过期时间（默认1个月）
+    // 5. 计算过期时间（默认1个月）
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30天后
 
-    // 7. 验证加密数据完整性（防止保存损坏的数据）
+    // 6. 验证加密数据完整性（防止保存损坏的数据）
     try {
       // 验证Base64格式
       atob(body.cipher);
@@ -151,8 +136,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // 5. 保存到数据库，记录创建人IP
-    const { error, data } = await supabase.from("secrets").insert({
+    // 7. 双写：同时写入 Supabase 和本地 PostgreSQL
+    const writeResult = await dualInsert({
       id: body.id,
       cipher: body.cipher,
       salt: body.salt,
@@ -161,47 +146,27 @@ export async function POST(req: Request) {
       retention_period: '1month',
       expires_at: expiresAt.toISOString(),
       created_by: clientIP
-    }).select();
+    });
 
-    if (error) {
-      console.error("[Database Error]", error);
-      console.error("[Error Details]", JSON.stringify(error, null, 2));
-      
-      // 如果是字段不存在的错误，尝试使用最小字段集保存
-      if (error.message.includes('created_by') || 
-          error.message.includes('retention_period') || 
-          error.message.includes('expires_at') ||
-          error.message.includes('column') ||
-          error.message.includes('schema cache')) {
-        
-        console.log("[Fallback] 尝试使用基础字段保存");
-        const { error: retryError } = await supabase.from("secrets").insert({
-          id: body.id,
-          cipher: body.cipher,
-          salt: body.salt,
-          iv: body.iv,
-          created_at: now.toISOString()
-        });
-        
-        if (retryError) {
-          console.error("[Retry Database Error]", retryError);
-          return NextResponse.json(
-            { error: `保存失败: ${retryError.message}`, code: "DATABASE_ERROR" },
-            { status: 500 }
-          );
-        }
-        
-        console.log(`[Success] 秘密创建成功（基础字段）: ${body.id} (IP: ${clientIP})`);
-        return NextResponse.json({ ok: true, id: body.id });
-      }
-      
+    // 检查写入结果
+    if (!writeResult.supabase.success && !writeResult.local.success) {
+      // 两个都失败
+      console.error("[Dual-DB Error] Both databases failed:", writeResult);
       return NextResponse.json(
-        { error: `保存失败: ${error.message}`, code: "DATABASE_ERROR" },
+        { error: "保存失败，请稍后重试", code: "DATABASE_ERROR" },
         { status: 500 }
       );
+    } else if (writeResult.supabase.success && writeResult.local.success) {
+      // 两个都成功
+      console.log(`[Dual-DB Success] 秘密创建成功: ${body.id} (Supabase ✅, Local ✅)`);
+    } else if (writeResult.supabase.success) {
+      // 仅 Supabase 成功
+      console.warn(`[Dual-DB Warning] 秘密已保存到 Supabase，本地备份失败: ${body.id}`);
+    } else {
+      // 仅本地成功（罕见情况）
+      console.warn(`[Dual-DB Warning] 秘密已保存到本地，Supabase 失败: ${body.id}`);
     }
 
-    console.log(`[Success] 秘密创建成功: ${body.id} (IP: ${clientIP})`);
     return NextResponse.json({ ok: true, id: body.id });
 
   } catch (error) {

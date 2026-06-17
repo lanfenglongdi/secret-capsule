@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { dualRead } from "@/lib/dual-database";
 
 // 禁用缓存，确保每次请求都从数据库获取最新数据
 export const dynamic = 'force-dynamic';
@@ -16,19 +16,20 @@ export async function GET(req: Request) {
     );
   }
 
-  // 查询必要字段，包括保存期限信息
-  const { data, error } = await supabase
-    .from("secrets")
-    .select("id, cipher, salt, iv, retention_period, expires_at")
-    .eq("id", id)
-    .single();
+  // 双读：优先从 Supabase 读取，失败时尝试本地数据库
+  const { data, source, error } = await dualRead(id);
 
-  if (error || !data) {
+  if (!data || error) {
     console.error("[Get Secret Error]", error);
     return NextResponse.json(
       { error: "秘密不存在或已被删除" },
       { status: 404 }
     );
+  }
+
+  // 如果从本地数据库读取，记录警告
+  if (source === "local") {
+    console.warn(`[Dual-DB] 从本地备份数据库读取秘密: ${id}`);
   }
 
   return NextResponse.json(data);

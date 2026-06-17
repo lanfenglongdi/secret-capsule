@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { updateRetention } from "@/lib/dual-database";
 
 // 保存期限选项（毫秒）
 const RETENTION_PERIODS: Record<string, number | null> = {
@@ -42,21 +42,21 @@ export async function POST(req: Request) {
     const periodMs = RETENTION_PERIODS[retention_period];
     const expiresAt = periodMs ? new Date(now.getTime() + periodMs).toISOString() : null;
 
-    // 更新数据库
-    const { error } = await supabase
-      .from("secrets")
-      .update({
-        retention_period,
-        expires_at: expiresAt
-      })
-      .eq("id", id);
+    // 双写：同时更新 Supabase 和本地 PostgreSQL
+    const result = await updateRetention(id, retention_period, expiresAt);
 
-    if (error) {
-      console.error("[Database Update Error]", error);
+    if (!result.supabase.success && !result.local.success) {
+      console.error("[Dual-DB Error] Both databases update failed:", result);
       return NextResponse.json(
         { error: "更新失败" },
         { status: 500 }
       );
+    } else if (result.supabase.success && result.local.success) {
+      console.log(`[Dual-DB Success] 保存期限已更新: ${id} (Supabase ✅, Local ✅)`);
+    } else if (result.supabase.success) {
+      console.warn(`[Dual-DB Warning] 仅 Supabase 更新成功: ${id}`);
+    } else {
+      console.warn(`[Dual-DB Warning] 仅本地数据库更新成功: ${id}`);
     }
 
     return NextResponse.json({
