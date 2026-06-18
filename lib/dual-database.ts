@@ -44,6 +44,9 @@ export async function dualInsert(data: any): Promise<DualWriteResult> {
       salt: data.salt,
       iv: data.iv,
       created_at: data.created_at || new Date().toISOString(),
+      retention_period: data.retention_period || "1month",
+      expires_at: data.expires_at || null,
+      created_by: data.created_by || null,
     });
 
     if (error) {

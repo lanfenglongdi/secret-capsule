@@ -8,7 +8,7 @@ export default function Home() {
       flexDirection: "column",
       justifyContent: "flex-start",
       alignItems: "center",
-      paddingTop: "25vh",
+      paddingTop: "4vh",
       paddingBottom: "50px",
       backgroundColor: "#fafafa",
       boxSizing: "border-box",
@@ -101,6 +101,89 @@ export default function Home() {
               🔓 解锁秘密
             </button>
           </a>
+        </div>
+
+        {/* 隐私保护说明 */}
+        <div style={{ 
+          marginTop: 30,
+          maxWidth: 430,
+          marginLeft: "auto",
+          marginRight: "auto",
+          textAlign: "left",
+          padding: "20px 24px",
+          backgroundColor: "white",
+          borderRadius: 10,
+          boxShadow: "0 1px 8px rgba(0,0,0,0.06)",
+          border: "1px solid #f5f5f5"
+        }}>
+          {/* 理念部分 */}
+          <div style={{ marginBottom: 16 }}>
+            <p style={{ fontSize: 12, color: "#555", lineHeight: 1.7, margin: "0 0 3px 0" }}>
+              互联网让分享变得容易，大数据、AI横行的时代，却让隐私却越来越稀缺。
+            </p>
+            <p style={{ fontSize: 12, color: "#555", lineHeight: 1.7, margin: "0 0 3px 0" }}>
+              成百上千的账号数字等一大堆，使我们每个人头疼。
+            </p>
+            <p style={{ fontSize: 12, color: "#555", lineHeight: 1.7, margin: "0 0 3px 0" }}>
+              于是，我们做了 Secret Capsule，做一块真正互联网隐私的公益净土。
+            </p>
+            <p style={{ fontSize: 12, color: "#555", lineHeight: 1.7, margin: 0 }}>
+              我们认为这是我们每个人理所当然的应有的权利！
+            </p>
+          </div>
+
+          {/* 加密技术部分 */}
+          <div style={{ 
+            marginBottom: 12,
+            padding: "12px 16px",
+            backgroundColor: "#f8faff",
+            borderRadius: 6,
+            borderLeft: "3px solid #0070f3"
+          }}>
+            <p style={{ fontSize: 12, color: "#555", lineHeight: 1.7, margin: "0 0 3px 0" }}>
+              您的秘密，在离开设备前就已加密。
+            </p>
+            <p style={{ fontSize: 12, color: "#555", lineHeight: 1.7, margin: "0 0 3px 0" }}>
+              端到端加密，传到网站数据库的只是一堆无序的密钥。
+            </p>
+            <p style={{ fontSize: 12, color: "#555", lineHeight: 1.7, margin: 0 }}>
+              没有您的密码，没有人能够看到它——包括我们自己。
+            </p>
+          </div>
+
+          {/* 核心理念 */}
+          <div style={{ 
+            marginBottom: 12,
+            padding: "12px 16px",
+            backgroundColor: "#fffbf0",
+            borderRadius: 6,
+            borderLeft: "3px solid #ffa500"
+          }}>
+            <p style={{ fontSize: 12, color: "#555", lineHeight: 1.7, margin: "0 0 3px 0" }}>
+              真正的隐私，不是"请相信我们"。
+            </p>
+            <p style={{ fontSize: 12, color: "#555", lineHeight: 1.7, margin: 0 }}>
+              而是：即使我们想看，也看不到。您的秘密，只属于您自己。
+            </p>
+          </div>
+
+          {/* 技术安全性 */}
+          <div style={{ 
+            padding: "12px 16px",
+            backgroundColor: "#f5fff8",
+            borderRadius: 6,
+            borderLeft: "3px solid #4caf50"
+          }}>
+            <p style={{ fontSize: 12, color: "#555", lineHeight: 1.7, margin: "0 0 3px 0" }}>
+              网站数据采用了世界级顶尖 Supabase 云数据库永久保存
+            </p>
+            <p style={{ fontSize: 12, color: "#555", lineHeight: 1.7, margin: "0 0 3px 0" }}>
+              + 阿里云异地备份双保险 · GitHub 开源透明
+            </p>
+            <p style={{ fontSize: 12, color: "#555", lineHeight: 1.7, margin: 0 }}>
+              多重保护，确保万无一失。
+            </p>
+          </div>
         </div>
 
         {/* 底部提示 */}
